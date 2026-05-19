@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>JARVIS ULTRA PRO MAX</title>
+<title>JARVIS AUTO START</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
@@ -15,7 +15,7 @@ body{
     overflow:hidden;
 }
 
-/* HUD BACKGROUND */
+/* fondo HUD */
 body::before{
     content:"";
     position:absolute;
@@ -24,15 +24,9 @@ body::before{
     background:
         radial-gradient(circle at 25% 30%, rgba(0,255,255,0.08), transparent 40%),
         radial-gradient(circle at 75% 70%, rgba(0,150,255,0.08), transparent 40%);
-    animation:move 12s infinite alternate ease-in-out;
 }
 
-@keyframes move{
-    from{ transform:scale(1); }
-    to{ transform:scale(1.15); }
-}
-
-/* CONTAINER */
+/* centro */
 #container{
     position:absolute;
     top:50%;
@@ -41,84 +35,26 @@ body::before{
     text-align:center;
 }
 
-/* CORE */
+/* núcleo */
 #core{
     width:240px;
     height:240px;
     border-radius:50%;
     background: radial-gradient(circle, #00f7ff, #001018 70%);
-    box-shadow:
-        0 0 25px #00f7ff,
-        0 0 90px rgba(0,255,255,0.5),
-        inset 0 0 40px rgba(255,255,255,0.1);
-    position:relative;
+    box-shadow:0 0 80px #00f7ff;
     animation:pulse 2.2s infinite ease-in-out;
 }
 
-/* RINGS */
-#core::before,
-#core::after{
-    content:"";
-    position:absolute;
-    border-radius:50%;
-    border:1px solid rgba(0,255,255,0.25);
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-}
-
-#core::before{
-    width:300px;
-    height:300px;
-    animation:spin 10s linear infinite;
-}
-
-#core::after{
-    width:360px;
-    height:360px;
-    animation:spinReverse 14s linear infinite;
-}
-
-/* ANIMATIONS */
+/* pulso */
 @keyframes pulse{
     0%,100%{ transform:scale(1); }
     50%{ transform:scale(1.06); }
 }
 
-@keyframes spin{
-    from{ transform:translate(-50%,-50%) rotate(0deg); }
-    to{ transform:translate(-50%,-50%) rotate(360deg); }
-}
-
-@keyframes spinReverse{
-    from{ transform:translate(-50%,-50%) rotate(360deg); }
-    to{ transform:translate(-50%,-50%) rotate(0deg); }
-}
-
-/* TEXT */
 #text{
     margin-top:20px;
     font-size:18px;
     letter-spacing:2px;
-    opacity:0.9;
-}
-
-/* BUTTONS */
-button{
-    margin-top:15px;
-    padding:10px 16px;
-    border-radius:8px;
-    border:1px solid #00f7ff;
-    background:transparent;
-    color:#00f7ff;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-button:hover{
-    background:#00f7ff;
-    color:black;
-    box-shadow:0 0 20px #00f7ff;
 }
 </style>
 </head>
@@ -126,14 +62,8 @@ button:hover{
 <body>
 
 <div id="container">
-
     <div id="core"></div>
-
-    <div id="text">JARVIS ULTRA PRO MAX listo...</div>
-
-    <button onclick="start()">🎤 Activar JARVIS</button>
-    <button onclick="hablar('Sistema activo y estable')">🔊 Test voz</button>
-
+    <div id="text">Iniciando JARVIS...</div>
 </div>
 
 <script>
@@ -143,15 +73,10 @@ const text = document.getElementById("text");
 let recognition;
 let speaking = false;
 
-// 🧠 MEMORIA SIMPLE
-let userKnown = false;
-let userName = "usuario";
-
-// 🔊 VOZ INTELIGENTE
+// 🔊 VOZ
 function hablar(t){
 
     if(speaking) return;
-
     speaking = true;
 
     const msg = new SpeechSynthesisUtterance(t);
@@ -164,15 +89,29 @@ function hablar(t){
 
     if(voice) msg.voice = voice;
 
-    msg.onend = () => {
-        speaking = false;
-    };
+    msg.onend = () => speaking = false;
 
     speechSynthesis.speak(msg);
 }
 
-// 🎤 ACTIVAR VOZ
-function start(){
+// 🌅 SALUDO AUTOMÁTICO
+function saludo(){
+
+    const h = new Date().getHours();
+
+    if(h >= 6 && h < 12){
+        return "Buenos días";
+    }
+    else if(h >= 12 && h < 19){
+        return "Buenas tardes";
+    }
+    else{
+        return "Buenas noches";
+    }
+}
+
+// 🎤 MICRÓFONO AUTOMÁTICO
+function iniciarVoz(){
 
     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "es-ES";
@@ -188,33 +127,18 @@ function start(){
     };
 
     recognition.start();
-
-    hablar("JARVIS Ultra Pro Max activado");
 }
 
-// ⚡ MOTOR DE IA
+// ⚡ COMANDOS
 function ejecutar(cmd){
 
-    // 🧠 MEMORIA SIMPLE
-    if(cmd.includes("mi nombre es")){
-        userName = cmd.split("mi nombre es")[1].trim();
-        userKnown = true;
-        hablar("Encantado de conocerte " + userName);
-        return;
-    }
-
-    if(cmd.includes("quien soy")){
-        hablar(userKnown ? "Eres " + userName : "Aún no me has dicho tu nombre");
-        return;
-    }
-
-    if(cmd.includes("hola")){
-        hablar("Hola " + (userKnown ? userName : "usuario"));
-    }
-
-    else if(cmd.includes("hora")){
+    if(cmd.includes("hora")){
         let h = new Date().toLocaleTimeString();
         hablar("Son las " + h);
+    }
+
+    else if(cmd.includes("hola")){
+        hablar("Hola, estoy aquí");
     }
 
     else if(cmd.includes("youtube")){
@@ -229,24 +153,40 @@ function ejecutar(cmd){
 
     else if(cmd.includes("modo alerta")){
         document.body.style.background = "#200";
-        document.getElementById("core").style.boxShadow = "0 0 80px red";
+        document.getElementById("core").style.boxShadow = "0 0 100px red";
         hablar("Modo alerta activado");
     }
 
     else if(cmd.includes("modo normal")){
         document.body.style.background = "black";
-        document.getElementById("core").style.boxShadow = "0 0 40px #00f7ff";
+        document.getElementById("core").style.boxShadow = "0 0 80px #00f7ff";
         hablar("Modo normal restaurado");
     }
 
-    else if(cmd.includes("ayuda")){
-        hablar("Puedes decir: hora, youtube, google, mi nombre es, modo alerta o modo normal");
+    else if(cmd.includes("quien eres")){
+        hablar("Soy JARVIS, tu asistente inteligente");
     }
 
     else{
         hablar("No entendí el comando");
     }
 }
+
+// 🚀 AUTO INICIO TOTAL
+window.onload = async () => {
+
+    text.innerHTML = "JARVIS iniciando...";
+
+    // saludo automático
+    const msg = saludo() + ", sistema activado";
+    hablar(msg);
+
+    // activar micrófono automáticamente
+    setTimeout(() => {
+        iniciarVoz();
+        text.innerHTML = "Escuchando...";
+    }, 2500);
+};
 
 </script>
 
