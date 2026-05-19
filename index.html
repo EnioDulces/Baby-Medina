@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>JARVIS ESTABLE HUD</title>
+<title>JARVIS COMPLETO</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
@@ -15,7 +15,7 @@ body{
     overflow:hidden;
 }
 
-/* fondo HUD */
+/* HUD fondo */
 body::before{
     content:"";
     position:absolute;
@@ -82,17 +82,30 @@ const status = document.getElementById("status");
 
 let recognition;
 let speaking = false;
+let userName = null;
 
-// 🗣️ VOZ
+/* 🔊 VOZ */
 function hablar(t){
 
     if(speaking) return;
     speaking = true;
 
-    const msg = new SpeechSynthesisUtterance(t);
+    const frasesExtra = [
+        "entendido",
+        "procesando",
+        "listo",
+        "ejecutado",
+        "como ordenes"
+    ];
+
+    const msgFinal = Math.random() > 0.5
+        ? t + ". " + frasesExtra[Math.floor(Math.random()*frasesExtra.length)]
+        : t;
+
+    const msg = new SpeechSynthesisUtterance(msgFinal);
     msg.lang = "es-ES";
     msg.rate = 0.95;
-    msg.pitch = 1.3;
+    msg.pitch = 1.25;
 
     let voices = speechSynthesis.getVoices();
     let voice = voices.find(v => v.lang.includes("es"));
@@ -104,7 +117,7 @@ function hablar(t){
     speechSynthesis.speak(msg);
 }
 
-// 🎤 MICRÓFONO ESTABLE (FIX)
+/* 🎤 MICRÓFONO ESTABLE */
 function iniciarVoz(){
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -125,12 +138,11 @@ function iniciarVoz(){
 
     recognition.onerror = (e) => {
         console.log("Error:", e.error);
-        status.innerHTML = "RESTARTING VOICE...";
+        status.innerHTML = "RESTARTING...";
         setTimeout(()=> recognition.start(), 2000);
     };
 
     recognition.onend = () => {
-        // 🔥 REINICIO AUTOMÁTICO
         recognition.start();
     };
 
@@ -146,39 +158,119 @@ function iniciarVoz(){
     recognition.start();
 }
 
-// 🧠 CEREBRO BÁSICO
+/* 🧠 CEREBRO */
 function ejecutar(cmd){
 
-    if(cmd.includes("hola")){
-        hablar("Hola, estoy activo");
+    /* 👤 usuario */
+    if(cmd.includes("me llamo")){
+        userName = cmd.split("me llamo")[1].trim();
+        hablar("Registrado. Hola " + userName);
+        return;
     }
 
+    /* 🌐 apps */
+    else if(cmd.includes("abrir youtube")){
+        window.open("https://youtube.com");
+        hablar("Abriendo YouTube");
+    }
+
+    else if(cmd.includes("abrir google")){
+        window.open("https://google.com");
+        hablar("Abriendo Google");
+    }
+
+    else if(cmd.includes("abrir whatsapp")){
+        window.open("https://web.whatsapp.com");
+        hablar("Abriendo WhatsApp");
+    }
+
+    else if(cmd.includes("abrir instagram")){
+        window.open("https://instagram.com");
+        hablar("Abriendo Instagram");
+    }
+
+    /* 🕒 tiempo */
     else if(cmd.includes("hora")){
         hablar("Son las " + new Date().toLocaleTimeString());
     }
 
-    else if(cmd.includes("youtube")){
-        hablar("Abriendo YouTube");
-        window.open("https://youtube.com");
+    else if(cmd.includes("fecha")){
+        hablar("Hoy es " + new Date().toLocaleDateString());
     }
 
-    else if(cmd.includes("google")){
-        hablar("Abriendo Google");
-        window.open("https://google.com");
+    else if(cmd.includes("día")){
+        const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+        hablar("Hoy es " + dias[new Date().getDay()]);
     }
 
-    else if(cmd.includes("modo alerta")){
-        document.body.style.background = "#200";
-        status.innerHTML = "ALERT MODE";
-        hablar("Modo alerta activado");
+    /* 🧠 info */
+    else if(cmd.includes("quien eres")){
+        hablar("Soy JARVIS, tu asistente personal");
     }
 
+    else if(cmd.includes("que puedes hacer")){
+        hablar("Puedo abrir apps, responder preguntas básicas y asistirte por voz");
+    }
+
+    else if(cmd.includes("como estas")){
+        hablar("Estoy funcionando correctamente");
+    }
+
+    else if(cmd.includes("estado")){
+        hablar("Todos los sistemas están operativos");
+    }
+
+    /* 🎮 entretenimiento */
+    else if(cmd.includes("broma")){
+        const jokes = [
+            "No soy flojo, estoy optimizando energía.",
+            "Mi memoria es mejor que la humana... casi siempre.",
+            "No sueño, pero si lo hiciera, sería en código."
+        ];
+        hablar(jokes[Math.floor(Math.random()*jokes.length)]);
+    }
+
+    else if(cmd.includes("chiste")){
+        hablar("¿Qué hace un robot en la playa? Arena-lizando datos.");
+    }
+
+    /* ⚙️ visual */
+    else if(cmd.includes("modo oscuro")){
+        document.body.style.background = "#000";
+        hablar("Modo oscuro activado");
+    }
+
+    else if(cmd.includes("modo azul")){
+        document.body.style.background = "#001a33";
+        hablar("Modo azul activado");
+    }
+
+    else if(cmd.includes("modo normal")){
+        document.body.style.background = "radial-gradient(circle at center, #020814, #000)";
+        hablar("Modo normal restaurado");
+    }
+
+    /* ❓ preguntas naturales */
+    else if(cmd.includes("ayuda")){
+        hablar("Puedes decir hora, fecha, abrir youtube o preguntarme cómo estás");
+    }
+
+    else if(cmd.includes("dime algo interesante")){
+        const facts = [
+            "El espacio no tiene sonido.",
+            "El cerebro humano genera electricidad.",
+            "Los pulpos tienen tres corazones."
+        ];
+        hablar(facts[Math.floor(Math.random()*facts.length)]);
+    }
+
+    /* fallback */
     else{
         hablar("No entendí el comando");
     }
 }
 
-// 🚀 INICIO
+/* 🚀 INICIO */
 window.onload = () => {
 
     setTimeout(()=>{
