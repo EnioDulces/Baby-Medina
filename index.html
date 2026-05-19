@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>JARVIS COMPLETO</title>
+<title>JARVIS ESTABLE FIXED</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
@@ -15,7 +15,7 @@ body{
     overflow:hidden;
 }
 
-/* HUD fondo */
+/* HUD */
 body::before{
     content:"";
     position:absolute;
@@ -41,9 +41,7 @@ body::before{
     height:260px;
     border-radius:50%;
     background: radial-gradient(circle at 30% 30%, #00ffff, #001018 70%);
-    box-shadow:
-        0 0 30px #00f7ff,
-        0 0 120px rgba(0,255,255,0.4);
+    box-shadow:0 0 30px #00f7ff, 0 0 120px rgba(0,255,255,0.4);
     animation:pulse 2.2s infinite ease-in-out;
 }
 
@@ -52,11 +50,9 @@ body::before{
     50%{ transform:scale(1.06); }
 }
 
-/* texto */
 #text{
     margin-top:20px;
     font-size:18px;
-    letter-spacing:2px;
 }
 
 #status{
@@ -82,7 +78,7 @@ const status = document.getElementById("status");
 
 let recognition;
 let speaking = false;
-let userName = null;
+let started = false;
 
 /* 🔊 VOZ */
 function hablar(t){
@@ -90,34 +86,17 @@ function hablar(t){
     if(speaking) return;
     speaking = true;
 
-    const frasesExtra = [
-        "entendido",
-        "procesando",
-        "listo",
-        "ejecutado",
-        "como ordenes"
-    ];
-
-    const msgFinal = Math.random() > 0.5
-        ? t + ". " + frasesExtra[Math.floor(Math.random()*frasesExtra.length)]
-        : t;
-
-    const msg = new SpeechSynthesisUtterance(msgFinal);
+    const msg = new SpeechSynthesisUtterance(t);
     msg.lang = "es-ES";
     msg.rate = 0.95;
-    msg.pitch = 1.25;
-
-    let voices = speechSynthesis.getVoices();
-    let voice = voices.find(v => v.lang.includes("es"));
-
-    if(voice) msg.voice = voice;
+    msg.pitch = 1.2;
 
     msg.onend = () => speaking = false;
 
     speechSynthesis.speak(msg);
 }
 
-/* 🎤 MICRÓFONO ESTABLE */
+/* 🎤 MICRÓFONO 100% ESTABLE */
 function iniciarVoz(){
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -133,17 +112,24 @@ function iniciarVoz(){
     recognition.interimResults = false;
 
     recognition.onstart = () => {
-        status.innerHTML = "LISTENING...";
+        status.innerHTML = "🎤 ESCUCHANDO...";
+        console.log("MIC ACTIVO");
     };
 
     recognition.onerror = (e) => {
-        console.log("Error:", e.error);
-        status.innerHTML = "RESTARTING...";
-        setTimeout(()=> recognition.start(), 2000);
+        console.log("ERROR:", e.error);
+        status.innerHTML = "🔁 REINICIANDO...";
+
+        setTimeout(() => {
+            try { recognition.start(); } catch {}
+        }, 1500);
     };
 
     recognition.onend = () => {
-        recognition.start();
+        // 🔥 REINICIO SEGURO
+        setTimeout(() => {
+            try { recognition.start(); } catch {}
+        }, 400);
     };
 
     recognition.onresult = (e) => {
@@ -155,129 +141,67 @@ function iniciarVoz(){
         ejecutar(cmd);
     };
 
-    recognition.start();
+    // 🔥 IMPORTANTE: solo arranca después de interacción
+    setTimeout(() => {
+        recognition.start();
+    }, 800);
 }
 
 /* 🧠 CEREBRO */
 function ejecutar(cmd){
 
-    /* 👤 usuario */
-    if(cmd.includes("me llamo")){
-        userName = cmd.split("me llamo")[1].trim();
-        hablar("Registrado. Hola " + userName);
-        return;
+    if(cmd.includes("hola")){
+        hablar("Hola, estoy activo");
     }
 
-    /* 🌐 apps */
-    else if(cmd.includes("abrir youtube")){
-        window.open("https://youtube.com");
-        hablar("Abriendo YouTube");
-    }
-
-    else if(cmd.includes("abrir google")){
-        window.open("https://google.com");
-        hablar("Abriendo Google");
-    }
-
-    else if(cmd.includes("abrir whatsapp")){
-        window.open("https://web.whatsapp.com");
-        hablar("Abriendo WhatsApp");
-    }
-
-    else if(cmd.includes("abrir instagram")){
-        window.open("https://instagram.com");
-        hablar("Abriendo Instagram");
-    }
-
-    /* 🕒 tiempo */
     else if(cmd.includes("hora")){
         hablar("Son las " + new Date().toLocaleTimeString());
     }
 
-    else if(cmd.includes("fecha")){
-        hablar("Hoy es " + new Date().toLocaleDateString());
+    else if(cmd.includes("youtube")){
+        window.open("https://youtube.com");
+        hablar("Abriendo YouTube");
     }
 
-    else if(cmd.includes("día")){
-        const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
-        hablar("Hoy es " + dias[new Date().getDay()]);
+    else if(cmd.includes("google")){
+        window.open("https://google.com");
+        hablar("Abriendo Google");
     }
 
-    /* 🧠 info */
     else if(cmd.includes("quien eres")){
-        hablar("Soy JARVIS, tu asistente personal");
-    }
-
-    else if(cmd.includes("que puedes hacer")){
-        hablar("Puedo abrir apps, responder preguntas básicas y asistirte por voz");
+        hablar("Soy JARVIS, tu asistente inteligente");
     }
 
     else if(cmd.includes("como estas")){
         hablar("Estoy funcionando correctamente");
     }
 
-    else if(cmd.includes("estado")){
-        hablar("Todos los sistemas están operativos");
+    else if(cmd.includes("modo alerta")){
+        document.body.style.background = "#200";
+        status.innerHTML = "ALERTA";
+        hablar("Modo alerta activado");
     }
 
-    /* 🎮 entretenimiento */
-    else if(cmd.includes("broma")){
-        const jokes = [
-            "No soy flojo, estoy optimizando energía.",
-            "Mi memoria es mejor que la humana... casi siempre.",
-            "No sueño, pero si lo hiciera, sería en código."
-        ];
-        hablar(jokes[Math.floor(Math.random()*jokes.length)]);
-    }
-
-    else if(cmd.includes("chiste")){
-        hablar("¿Qué hace un robot en la playa? Arena-lizando datos.");
-    }
-
-    /* ⚙️ visual */
-    else if(cmd.includes("modo oscuro")){
-        document.body.style.background = "#000";
-        hablar("Modo oscuro activado");
-    }
-
-    else if(cmd.includes("modo azul")){
-        document.body.style.background = "#001a33";
-        hablar("Modo azul activado");
-    }
-
-    else if(cmd.includes("modo normal")){
-        document.body.style.background = "radial-gradient(circle at center, #020814, #000)";
-        hablar("Modo normal restaurado");
-    }
-
-    /* ❓ preguntas naturales */
-    else if(cmd.includes("ayuda")){
-        hablar("Puedes decir hora, fecha, abrir youtube o preguntarme cómo estás");
-    }
-
-    else if(cmd.includes("dime algo interesante")){
-        const facts = [
-            "El espacio no tiene sonido.",
-            "El cerebro humano genera electricidad.",
-            "Los pulpos tienen tres corazones."
-        ];
-        hablar(facts[Math.floor(Math.random()*facts.length)]);
-    }
-
-    /* fallback */
     else{
         hablar("No entendí el comando");
     }
 }
 
-/* 🚀 INICIO */
+/* 🚀 ARRANQUE SEGURO */
 window.onload = () => {
 
-    setTimeout(()=>{
-        hablar("Sistema JARVIS activado");
-        iniciarVoz();
-        status.innerHTML = "ONLINE";
-    },2000);
+    hablar("Sistema JARVIS iniciado");
+
+    status.innerHTML = "ONLINE";
+
+    // 🔥 clave para Chrome
+    document.body.addEventListener("click", () => {
+        if(!started){
+            started = true;
+            iniciarVoz();
+        }
+    });
+
 };
 
 </script>
